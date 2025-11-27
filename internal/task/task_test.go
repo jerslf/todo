@@ -16,16 +16,16 @@ func TestTasksAdd(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(tasks) != 1 {
-		t.Fatalf("expected 1 task, got %d", len(tasks))
+	if len(tasks.items) != 1 {
+		t.Fatalf("expected 1 task, got %d", len(tasks.items))
 	}
 
-	if tasks[0].Title != "Buy milk!" {
-		t.Errorf("expected title 'Buy milk', got '%s'", tasks[0].Title)
+	if tasks.items[0].Title != "Buy milk!" {
+		t.Errorf("expected title 'Buy milk', got '%s'", tasks.items[0].Title)
 	}
 
-	if tasks[0].ID != 1 {
-		t.Errorf("expected ID 1, got '%d'", tasks[0].ID)
+	if tasks.items[0].ID != 1 {
+		t.Errorf("expected ID 1, got '%d'", tasks.items[0].ID)
 	}
 }
 
@@ -66,9 +66,10 @@ func TestList_EmptyTasks(t *testing.T) {
 
 func TestList_ListAll(t *testing.T) {
 	now := time.Now()
-	tasks := Tasks{
+	tasks := Tasks{items: []Task{
 		{ID: 1, Title: "A", Done: false, TimeCreated: now},
 		{ID: 2, Title: "B", Done: true, TimeCreated: now},
+	},
 	}
 
 	result := tasks.List(true)
@@ -88,8 +89,7 @@ func TestList_OnlyDone(t *testing.T) {
 	t2 := Task{ID: 2, Title: "B", Done: true, TimeCreated: now}
 	t3 := Task{ID: 3, Title: "C", Done: false, TimeCreated: now}
 
-	tasks := Tasks{t1, t2, t3}
-
+	tasks := Tasks{items: []Task{t1, t2, t3}}
 	result := tasks.List(false)
 
 	if len(result) != 2 {
@@ -190,5 +190,23 @@ func TestMarkUndoneWhenAlreadyUndone(t *testing.T) {
 
 	if task.TimeDone != nil {
 		t.Fatalf("expected TimeDone to stay nil")
+	}
+}
+
+func TestDeleteExisting(t *testing.T) {
+	now := time.Now()
+	tasks := Tasks{items: []Task{
+		{ID: 1, Title: "A", Done: false, TimeCreated: now},
+		{ID: 2, Title: "B", Done: true, TimeCreated: now},
+		{ID: 3, Title: "C", Done: false, TimeCreated: now},
+	}}
+
+	err := tasks.Delete(2)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(tasks.items) != 2 {
+		t.Fatalf("expected 2 tasks after deletion, got %d", len(tasks.items))
 	}
 }

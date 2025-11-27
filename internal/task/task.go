@@ -2,6 +2,8 @@ package task
 
 import (
 	"errors"
+	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -14,9 +16,12 @@ type Task struct {
 	TimeDone    *time.Time
 }
 
-type Tasks []Task
+type Tasks struct {
+	items  []Task
+	nextID int
+}
 
-func (t *Tasks) Add(title string) error {
+func (ts *Tasks) Add(title string) error {
 	// Check empty string
 	if strings.TrimSpace(title) == "" {
 		return errors.New("title cannot be empty")
@@ -29,7 +34,7 @@ func (t *Tasks) Add(title string) error {
 	title = strings.TrimSpace(title)
 
 	// Create and append task
-	id := len(*t) + 1
+	id := len(ts.items) + 1
 	task := Task{
 		ID:          id,
 		Title:       title,
@@ -37,22 +42,22 @@ func (t *Tasks) Add(title string) error {
 		TimeCreated: time.Now(),
 		TimeDone:    nil,
 	}
-	*t = append(*t, task)
+	ts.items = append(ts.items, task)
 	return nil
 }
 
-func (t *Tasks) List(listAll bool) []Task {
-	if len(*t) == 0 {
+func (ts *Tasks) List(listAll bool) []Task {
+	if len(ts.items) == 0 {
 		return nil
 	}
 
 	if listAll {
-		return *t
+		return ts.items
 	}
 
 	// only not done tasks
 	var undone []Task
-	for _, task := range *t {
+	for _, task := range ts.items {
 		if !task.Done {
 			undone = append(undone, task)
 		}
@@ -72,4 +77,14 @@ func (t *Task) MarkDone() {
 func (t *Task) MarkUndone() {
 	t.Done = false
 	t.TimeDone = nil
+}
+
+func (ts *Tasks) Delete(id int) error {
+	for i, task := range ts.items {
+		if task.ID == id {
+			ts.items = slices.Delete(ts.items, i, i+1)
+			return nil
+		}
+	}
+	return fmt.Errorf("task with ID %d not found", id)
 }
