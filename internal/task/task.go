@@ -7,6 +7,7 @@ import (
 )
 
 type Task struct {
+	ID          int
 	Title       string
 	Done        bool
 	TimeCreated time.Time
@@ -28,7 +29,9 @@ func (t *Tasks) Add(title string) error {
 	title = strings.TrimSpace(title)
 
 	// Create and append task
+	id := len(*t) + 1
 	task := Task{
+		ID:          id,
 		Title:       title,
 		Done:        false,
 		TimeCreated: time.Now(),
@@ -55,4 +58,18 @@ func (t *Tasks) List(listAll bool) []Task {
 		}
 	}
 	return undone
+}
+
+func (t *Task) MarkDone() {
+	if t.Done {
+		return
+	}
+	t.Done = true
+	now := time.Now()
+	t.TimeDone = &now
+}
+
+func (t *Task) MarkUndone() {
+	t.Done = false
+	t.TimeDone = nil
 }

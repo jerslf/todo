@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// --- Add ---
+
 func TestTasksAdd(t *testing.T) {
 	var tasks Tasks
 
@@ -20,6 +22,10 @@ func TestTasksAdd(t *testing.T) {
 
 	if tasks[0].Title != "Buy milk!" {
 		t.Errorf("expected title 'Buy milk', got '%s'", tasks[0].Title)
+	}
+
+	if tasks[0].ID != 1 {
+		t.Errorf("expected ID 1, got '%d'", tasks[0].ID)
 	}
 }
 
@@ -42,6 +48,8 @@ func TestTasksAddTooLongTitle(t *testing.T) {
 	}
 }
 
+// --- List ---
+
 func TestList_EmptyTasks(t *testing.T) {
 	var tasks Tasks
 
@@ -59,8 +67,8 @@ func TestList_EmptyTasks(t *testing.T) {
 func TestList_ListAll(t *testing.T) {
 	now := time.Now()
 	tasks := Tasks{
-		{Title: "A", Done: false, TimeCreated: now},
-		{Title: "B", Done: true, TimeCreated: now},
+		{ID: 1, Title: "A", Done: false, TimeCreated: now},
+		{ID: 2, Title: "B", Done: true, TimeCreated: now},
 	}
 
 	result := tasks.List(true)
@@ -76,9 +84,9 @@ func TestList_ListAll(t *testing.T) {
 
 func TestList_OnlyDone(t *testing.T) {
 	now := time.Now()
-	t1 := Task{Title: "A", Done: false, TimeCreated: now}
-	t2 := Task{Title: "B", Done: true, TimeCreated: now}
-	t3 := Task{Title: "C", Done: false, TimeCreated: now}
+	t1 := Task{ID: 1, Title: "A", Done: false, TimeCreated: now}
+	t2 := Task{ID: 2, Title: "B", Done: true, TimeCreated: now}
+	t3 := Task{ID: 3, Title: "C", Done: false, TimeCreated: now}
 
 	tasks := Tasks{t1, t2, t3}
 
@@ -88,7 +96,99 @@ func TestList_OnlyDone(t *testing.T) {
 		t.Fatalf("expected 2 not done task, got %d", len(result))
 	}
 
-	if result[0].Title != "A" || result[1].Title != "C" {
+	if result[0].ID != 1 || result[1].ID != 3 {
 		t.Fatalf("list(false) returned wrong tasks: %v", result)
+	}
+}
+
+// --- MarkDone ---
+
+func TestMarkDone(t *testing.T) {
+	task := Task{
+		ID:          1,
+		Title:       "Test",
+		Done:        false,
+		TimeCreated: time.Now(),
+		TimeDone:    nil,
+	}
+
+	task.MarkDone()
+
+	if !task.Done {
+		t.Fatalf("expected task to be marked done")
+	}
+
+	if task.TimeDone == nil {
+		t.Fatalf("expected TimeDone to be set, got nil")
+	}
+
+	// Check that TimeDone is recent (within the last second)
+	if time.Since(*task.TimeDone) > time.Second {
+		t.Fatalf("expected TimeDone to be recent, got %v", *task.TimeDone)
+	}
+}
+
+func TestMarkDoneWhenAlreadyDone(t *testing.T) {
+	initialTime := time.Now().Add(-1 * time.Hour)
+	task := Task{
+		ID:          1,
+		Title:       "Test",
+		Done:        true,
+		TimeCreated: time.Now(),
+		TimeDone:    &initialTime,
+	}
+
+	task.MarkDone()
+
+	if !task.Done {
+		t.Fatalf("expected task to stay done")
+	}
+
+	if *task.TimeDone != initialTime {
+		t.Fatalf("expected TimeDone not to change")
+	}
+}
+
+// --- MarkUndone ---
+
+func TestMarkUndone(t *testing.T) {
+	initialTime := time.Now()
+
+	task := Task{
+		ID:          1,
+		Title:       "Test",
+		Done:        true,
+		TimeCreated: time.Now(),
+		TimeDone:    &initialTime,
+	}
+
+	task.MarkUndone()
+
+	if task.Done {
+		t.Fatalf("expected task to be marked undone")
+	}
+
+	if task.TimeDone != nil {
+		t.Fatalf("expected TimeDone to be nil after MarkUndone, got %v", *task.TimeDone)
+	}
+}
+
+func TestMarkUndoneWhenAlreadyUndone(t *testing.T) {
+	task := Task{
+		ID:          1,
+		Title:       "Test",
+		Done:        false,
+		TimeCreated: time.Now(),
+		TimeDone:    nil,
+	}
+
+	task.MarkUndone()
+
+	if task.Done {
+		t.Fatalf("expected task to remain undone")
+	}
+
+	if task.TimeDone != nil {
+		t.Fatalf("expected TimeDone to stay nil")
 	}
 }
