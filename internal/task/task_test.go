@@ -16,16 +16,16 @@ func TestTasksAdd(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(tasks.items) != 1 {
-		t.Fatalf("expected 1 task, got %d", len(tasks.items))
+	if len(tasks.Items) != 1 {
+		t.Fatalf("expected 1 task, got %d", len(tasks.Items))
 	}
 
-	if tasks.items[0].Title != "Buy milk!" {
-		t.Errorf("expected title 'Buy milk', got '%s'", tasks.items[0].Title)
+	if tasks.Items[0].Title != "Buy milk!" {
+		t.Errorf("expected title 'Buy milk', got '%s'", tasks.Items[0].Title)
 	}
 
-	if tasks.items[0].ID != 1 {
-		t.Errorf("expected ID 1, got '%d'", tasks.items[0].ID)
+	if tasks.Items[0].ID != 1 {
+		t.Errorf("expected ID 1, got '%d'", tasks.Items[0].ID)
 	}
 
 	err = tasks.Add("Buy soy!")
@@ -33,8 +33,8 @@ func TestTasksAdd(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if tasks.items[1].ID != 2 {
-		t.Errorf("expected ID 2, got '%d'", tasks.items[1].ID)
+	if tasks.Items[1].ID != 2 {
+		t.Errorf("expected ID 2, got '%d'", tasks.Items[1].ID)
 	}
 }
 
@@ -75,7 +75,7 @@ func TestList_EmptyTasks(t *testing.T) {
 
 func TestList_ListAll(t *testing.T) {
 	now := time.Now()
-	tasks := Tasks{items: []Task{
+	tasks := Tasks{Items: []Task{
 		{ID: 1, Title: "A", Done: false, TimeCreated: now},
 		{ID: 2, Title: "B", Done: true, TimeCreated: now},
 	},
@@ -98,7 +98,7 @@ func TestList_OnlyDone(t *testing.T) {
 	t2 := Task{ID: 2, Title: "B", Done: true, TimeCreated: now}
 	t3 := Task{ID: 3, Title: "C", Done: false, TimeCreated: now}
 
-	tasks := Tasks{items: []Task{t1, t2, t3}}
+	tasks := Tasks{Items: []Task{t1, t2, t3}}
 	result := tasks.List(false)
 
 	if len(result) != 2 {
@@ -204,7 +204,7 @@ func TestMarkUndoneWhenAlreadyUndone(t *testing.T) {
 
 func TestDeleteExisting(t *testing.T) {
 	now := time.Now()
-	tasks := Tasks{items: []Task{
+	tasks := Tasks{Items: []Task{
 		{ID: 1, Title: "A", Done: false, TimeCreated: now},
 		{ID: 2, Title: "B", Done: true, TimeCreated: now},
 		{ID: 3, Title: "C", Done: false, TimeCreated: now},
@@ -215,7 +215,7 @@ func TestDeleteExisting(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(tasks.items) != 2 {
-		t.Fatalf("expected 2 tasks after deletion, got %d", len(tasks.items))
+	if len(tasks.Items) != 2 {
+		t.Fatalf("expected 2 tasks after deletion, got %d", len(tasks.Items))
 	}
 }

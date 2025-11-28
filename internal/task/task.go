@@ -17,8 +17,8 @@ type Task struct {
 }
 
 type Tasks struct {
-	items  []Task
-	nextID int
+	Items  []Task
+	NextID int
 }
 
 func (ts *Tasks) Add(title string) error {
@@ -34,8 +34,8 @@ func (ts *Tasks) Add(title string) error {
 	title = strings.TrimSpace(title)
 
 	// Create and append task
-	id := ts.nextID + 1
-	ts.nextID = id
+	id := ts.NextID + 1
+	ts.NextID = id
 	task := Task{
 		ID:          id,
 		Title:       title,
@@ -43,22 +43,22 @@ func (ts *Tasks) Add(title string) error {
 		TimeCreated: time.Now(),
 		TimeDone:    nil,
 	}
-	ts.items = append(ts.items, task)
+	ts.Items = append(ts.Items, task)
 	return nil
 }
 
 func (ts *Tasks) List(listAll bool) []Task {
-	if len(ts.items) == 0 {
+	if len(ts.Items) == 0 {
 		return nil
 	}
 
 	if listAll {
-		return ts.items
+		return ts.Items
 	}
 
 	// only not done tasks
 	var undone []Task
-	for _, task := range ts.items {
+	for _, task := range ts.Items {
 		if !task.Done {
 			undone = append(undone, task)
 		}
@@ -81,9 +81,9 @@ func (t *Task) MarkUndone() {
 }
 
 func (ts *Tasks) Delete(id int) error {
-	for i, task := range ts.items {
+	for i, task := range ts.Items {
 		if task.ID == id {
-			ts.items = slices.Delete(ts.items, i, i+1)
+			ts.Items = slices.Delete(ts.Items, i, i+1)
 			return nil
 		}
 	}
