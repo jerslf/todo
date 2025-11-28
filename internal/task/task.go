@@ -34,7 +34,8 @@ func (ts *Tasks) Add(title string) error {
 	title = strings.TrimSpace(title)
 
 	// Create and append task
-	id := len(ts.items) + 1
+	id := ts.nextID + 1
+	ts.nextID = id
 	task := Task{
 		ID:          id,
 		Title:       title,

@@ -6,3 +6,6 @@ build:
 
 clean:
 	rm -f todo
+
+test:
+	go test ./...

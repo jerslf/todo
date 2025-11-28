@@ -27,6 +27,15 @@ func TestTasksAdd(t *testing.T) {
 	if tasks.items[0].ID != 1 {
 		t.Errorf("expected ID 1, got '%d'", tasks.items[0].ID)
 	}
+
+	err = tasks.Add("Buy soy!")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if tasks.items[1].ID != 2 {
+		t.Errorf("expected ID 2, got '%d'", tasks.items[1].ID)
+	}
 }
 
 func TestTasksAddEmptyTitle(t *testing.T) {
