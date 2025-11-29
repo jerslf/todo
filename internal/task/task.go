@@ -27,7 +27,7 @@ func (ts *Tasks) Add(title string) error {
 		return errors.New("title cannot be empty")
 	}
 	// Check length
-	if len(title) > 200 {
+	if len(title) > 100 {
 		return errors.New("title is too long")
 	}
 	// Normalise

@@ -9,8 +9,8 @@ import (
 	"github.com/mergestat/timediff"
 )
 
-func PrintTasks(out io.Writer, ts task.Tasks) {
-	if len(ts.Items) == 0 {
+func PrintTasks(out io.Writer, ts []task.Task) {
+	if len(ts) == 0 {
 		fmt.Fprintln(out, "No tasks found.")
 		return
 	}
@@ -23,7 +23,7 @@ func PrintTasks(out io.Writer, ts task.Tasks) {
 	fmt.Fprintln(w, "ID\tTitle\tStatus\tCreated\tCompleted")
 
 	// Print each task
-	for _, t := range ts.Items {
+	for _, t := range ts {
 		created := timediff.TimeDiff(t.TimeCreated)
 
 		var doneAt string
