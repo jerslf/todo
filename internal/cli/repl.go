@@ -12,7 +12,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*task.Tasks, ...string) error
+	callback    func(*task.DB, ...string) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -61,7 +61,7 @@ func cleanInput(text string) []string {
 	return words
 }
 
-func StartRepl(ts *task.Tasks) {
+func StartRepl(db *task.DB) {
 	reader := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Todo > ")
@@ -80,7 +80,7 @@ func StartRepl(ts *task.Tasks) {
 
 		c, exists := getCommands()[commandName]
 		if exists {
-			err := c.callback(ts, args...)
+			err := c.callback(db, args...)
 			if err != nil {
 				fmt.Println(err)
 			}

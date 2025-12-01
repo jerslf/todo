@@ -1,22 +1,24 @@
 package cli
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jerslf/todo/internal/task"
 	"github.com/jerslf/todo/internal/view"
 )
 
-func commandExit(ts *task.Tasks, args ...string) error {
+func commandExit(db *task.DB, args ...string) error {
 	fmt.Println("Closing Todo app...")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(ts *task.Tasks, args ...string) error {
+func commandHelp(db *task.DB, args ...string) error {
 	fmt.Println()
 	fmt.Println("Welcome to the Todo app!")
 	fmt.Println("Usage:")
@@ -28,84 +30,84 @@ func commandHelp(ts *task.Tasks, args ...string) error {
 	return nil
 }
 
-func commandAdd(ts *task.Tasks, args ...string) error {
+func commandAdd(db *task.DB, args ...string) error {
 	title := strings.Join(args, " ")
-	err := ts.Add(title)
+	now := time.Now()
+
+	result, err := db.Conn.Exec("INSERT INTO tasks(title, done, time_created) VALUES (?, ?, ?)", title, false, now)
 	if err != nil {
-		fmt.Println("Error adding task:", err)
-		return err
+		return fmt.Errorf("insert task: %w", err)
 	}
-	fmt.Printf("Task added successfully. Title: %s\n", title)
+
+	id, _ := result.LastInsertId()
+	fmt.Printf("Task added successfully. ID: %d, Title: %s\n", id, title)
 	return nil
 }
 
-func commandList(ts *task.Tasks, args ...string) error {
-	if len(args) > 0 && args[0] == "-a" {
-		view.PrintTasks(os.Stdout, ts.List(true))
-	} else {
-		view.PrintTasks(os.Stdout, ts.List(false))
-	}
-	return nil
-}
+func commandList(db *task.DB, args ...string) error {
+	listAll := len(args) > 0 && args[0] == "-a"
 
-func commandComplete(ts *task.Tasks, args ...string) error {
-	id := args[0]
-	intID, err := strconv.Atoi(id)
+	query := "SELECT id, title, done, time_created, time_done FROM tasks"
+	if !listAll {
+		query += " WHERE done = 0"
+	}
+
+	rows, err := db.Conn.Query(query)
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %s", id)
+		return fmt.Errorf("query tasks: %w", err)
 	}
+	defer rows.Close()
 
-	if intID <= 0 || intID > len(ts.Items) {
-		return fmt.Errorf("task ID %d does not exist", intID)
-	}
-
-	for i := range ts.Items {
-		if ts.Items[i].ID == intID {
-			ts.Items[i].MarkDone()
-			fmt.Printf("Task ID %d marked as done.\n", intID)
-			return nil
+	var tasks []task.Task
+	for rows.Next() {
+		var t task.Task
+		var doneTime sql.NullTime
+		if err := rows.Scan(&t.ID, &t.Title, &t.Done, &t.TimeCreated, &doneTime); err != nil {
+			return fmt.Errorf("scan row: %w", err)
 		}
-	}
-	return nil
-}
-
-func commandUnComplete(ts *task.Tasks, args ...string) error {
-	id := args[0]
-	intID, err := strconv.Atoi(id)
-	if err != nil {
-		return fmt.Errorf("invalid task ID: %s", id)
-	}
-
-	if intID <= 0 || intID > len(ts.Items) {
-		return fmt.Errorf("task ID %d does not exist", intID)
-	}
-
-	for i := range ts.Items {
-		if ts.Items[i].ID == intID {
-			ts.Items[i].MarkUndone()
-			fmt.Printf("Task ID %d marked as not done.\n", intID)
-			return nil
+		if doneTime.Valid {
+			t.TimeDone = &doneTime.Time
 		}
+		tasks = append(tasks, t)
 	}
+
+	view.PrintTasks(os.Stdout, tasks)
 	return nil
 }
 
-func commandDelete(ts *task.Tasks, args ...string) error {
-	id := args[0]
-	intID, err := strconv.Atoi(id)
+func commandComplete(db *task.DB, args ...string) error {
+	id, err := strconv.Atoi(args[0])
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %s", id)
+		return fmt.Errorf("invalid task ID: %s", args[0])
 	}
 
-	if intID <= 0 || intID > len(ts.Items) {
-		return fmt.Errorf("task ID %d does not exist", intID)
-	}
-
-	err = ts.Delete(intID)
+	now := time.Now()
+	_, err = db.Conn.Exec("UPDATE tasks SET done = 1, time_done = ? WHERE id = ?", now, id)
 	if err != nil {
-		return fmt.Errorf("error deleting task ID %d: %v", intID, err)
+		return fmt.Errorf("update task: %w", err)
 	}
 
-	fmt.Printf("Task ID %d deleted successfully.\n", intID)
+	fmt.Printf("Task ID %d marked as done.\n", id)
+	return nil
+}
+
+func commandUnComplete(db *task.DB, args ...string) error {
+	id, _ := strconv.Atoi(args[0])
+	_, err := db.Conn.Exec("UPDATE tasks SET done = 0, time_done = NULL WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("update task: %w", err)
+	}
+
+	fmt.Printf("Task ID %d marked as not done.\n", id)
+	return nil
+}
+
+func commandDelete(db *task.DB, args ...string) error {
+	id, _ := strconv.Atoi(args[0])
+	_, err := db.Conn.Exec("DELETE FROM tasks WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("delete task: %w", err)
+	}
+	fmt.Printf("Task ID %d deleted successfully.\n", id)
 	return nil
 }
