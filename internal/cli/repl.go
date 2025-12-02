@@ -27,6 +27,11 @@ func getCommands() map[string]cliCommand {
 			description: "return a list of all of uncompleted tasks, with option -a to return all tasks regardless of whether or not they are completed",
 			callback:    commandList,
 		},
+		"ls": {
+			name:        "list {optional: -a}",
+			description: "return a list of all of uncompleted tasks, with option -a to return all tasks regardless of whether or not they are completed",
+			callback:    commandList,
+		},
 		"complete": {
 			name:        "complete {id}",
 			description: "mark a task as done",
